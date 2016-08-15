@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var (
+	// default colors for the application
+	defaultColor        = newColor(FgHiCyan)
+	defaultSuccessColor = newColor(FgHiGreen)
+	defaultFailColor    = newColor(FgHiRed)
+	defaultWarnColor    = newColor(FgHiYellow)
+)
+
 // Spinner is a representation of the animation itself
 type Spinner struct {
 
@@ -38,10 +46,16 @@ type Spinner struct {
 
 	// Separator will separate the messages each other, by default this should be carriage return
 	separator string
+
+	// color
+	color *Color
+
+	// disableColor
+	disableColor bool
 }
 
-// NewSpinner returns an animation type
-func NewSpinner(kind AnimationKind, startMessage string) (*Spinner, error) {
+//create is a helper function for all the creators
+func create(kind AnimationKind, startMessage string) (*Spinner, error) {
 	an, ok := animations[kind]
 	if !ok {
 		return nil, errors.New("Wrong kind of animation")
@@ -52,18 +66,56 @@ func NewSpinner(kind AnimationKind, startMessage string) (*Spinner, error) {
 		Writer:    os.Stdout,
 		separator: "\r",
 	}
+	return s, nil
+}
 
-	// Set the initial frames
+// NewSpinner is the defalult spinner for easy ussage with default colors
+func NewSpinner(kind AnimationKind, startMessage string) (*Spinner, error) {
+
+	s, err := create(kind, startMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	s.color = defaultColor
 	s.createFrames()
 
 	return s, nil
 }
 
+func NewSpinnerNoColor(kind AnimationKind, startMessage string) (*Spinner, error) {
+	s, err := create(kind, startMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	s.color = defaultColor
+	s.disableColor = true
+	s.createFrames()
+
+	return s, nil
+}
+
+// NewSpinnerWithColor returns a new spinner with color
+func NewSpinnerWithColor(kind AnimationKind, startMessage string, color ColorAttr) (*Spinner, error) {
+	s, err := create(kind, startMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	s.color = newColor(color)
+	s.createFrames()
+	return s, nil
+}
+
 func (s *Spinner) createFrames() {
 	f := make([]string, len(s.animation.frames))
-
 	for i, c := range s.animation.frames {
-		f[i] = fmt.Sprintf("%s %s", c, s.message)
+		var symbol = c
+		if !s.disableColor || s.color != nil {
+			symbol = s.color.SprintfFunc()(c)
+		}
+		f[i] = fmt.Sprintf("%s %s", symbol, s.message)
 	}
 
 	// Set the new animation
@@ -134,17 +186,29 @@ func (s *Spinner) Reset() {
 
 // Succeed will stop the animation with a success symbol where the spinner is
 func (s *Spinner) Succeed() {
-	s.FinishWithSymbol(successSymbol)
+	symbol := successSymbol
+	if !s.disableColor || s.color != nil {
+		symbol = defaultSuccessColor.SprintfFunc()(successSymbol)
+	}
+	s.FinishWithSymbol(symbol)
 }
 
 // Fail will stop the animation with a failure symbol where the spinner is
 func (s *Spinner) Fail() {
-	s.FinishWithSymbol(failureSymbol)
+	symbol := failureSymbol
+	if !s.disableColor || s.color != nil {
+		symbol = defaultFailColor.SprintfFunc()(failureSymbol)
+	}
+	s.FinishWithSymbol(symbol)
 }
 
 // Warn will stop the animation with a warning symbol where the spinner is
 func (s *Spinner) Warn() {
-	s.FinishWithSymbol(WarningSymbol)
+	symbol := WarningSymbol
+	if !s.disableColor || s.color != nil {
+		symbol = defaultWarnColor.SprintfFunc()(WarningSymbol)
+	}
+	s.FinishWithSymbol(symbol)
 }
 
 // Finish will stop an write to the next line
@@ -156,16 +220,20 @@ func (s *Spinner) Finish() {
 
 // FinishWithSymbol will finish the animation with a symbol where the spinner is
 func (s *Spinner) FinishWithSymbol(symbol string) {
-	s.Stop()
-	s.Reset()
-	msg := fmt.Sprintf("%s%s %s\n", s.separator, symbol, s.message)
-	fmt.Fprint(s.Writer, msg)
-	// should maintian the spinner
+	s.FinishWithMessage(symbol, s.message)
 }
 
 // FinishWithMessage will finish animation setting a message and a symbol where the spinner was
 func (s *Spinner) FinishWithMessage(symbol, closingMessage string) {
 	s.Stop()
 	s.Reset()
-	fmt.Fprintf(s.Writer, "%s%s %s\n", s.separator, symbol, closingMessage)
+	previousLen := len(s.previousFrame)
+	finalMsg := fmt.Sprintf("%s %s", symbol, closingMessage)
+	newLen := len(finalMsg)
+	if previousLen > newLen {
+		r := previousLen - newLen
+		suffix := strings.Repeat(" ", r)
+		finalMsg = finalMsg + suffix
+	}
+	fmt.Fprintf(s.Writer, "%s%s\n", s.separator, finalMsg)
 }

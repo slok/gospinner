@@ -46,8 +46,9 @@ func TestCreateFrames(t *testing.T) {
 
 	for _, test := range tests {
 		s := &Spinner{
-			animation: animations[test.kind],
-			message:   test.startMessage,
+			animation:    animations[test.kind],
+			message:      test.startMessage,
+			disableColor: true,
 		}
 
 		s.createFrames()
@@ -74,9 +75,10 @@ func TestRender(t *testing.T) {
 		var buf bytes.Buffer
 
 		s := &Spinner{
-			animation: animations[test.kind],
-			message:   test.startMessage,
-			Writer:    &buf,
+			animation:    animations[test.kind],
+			message:      test.startMessage,
+			disableColor: true,
+			Writer:       &buf,
 		}
 		s.createFrames()
 
@@ -106,9 +108,10 @@ func TestSetMessage(t *testing.T) {
 		var buf bytes.Buffer
 
 		s := &Spinner{
-			animation: animations[test.kind],
-			message:   test.startMessage,
-			Writer:    &buf,
+			animation:    animations[test.kind],
+			message:      test.startMessage,
+			disableColor: true,
+			Writer:       &buf,
 		}
 		s.createFrames()
 		s.Render()
@@ -126,9 +129,10 @@ func TestStop(t *testing.T) {
 	var buf bytes.Buffer
 
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
 	}
 	s.createFrames()
 	s.Start()
@@ -150,10 +154,11 @@ func TestReset(t *testing.T) {
 	frames := []string{"◐ This is a test", "◓ This is a test", "◑ This is a test", "◒ This is a test"}
 
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "This is a test",
-		Writer:    &buf,
-		step:      5,
+		animation:    animations[Ball],
+		message:      "This is a test",
+		disableColor: true,
+		Writer:       &buf,
+		step:         5,
 	}
 	s.Reset()
 
@@ -171,9 +176,10 @@ func TestSucceed(t *testing.T) {
 
 	want := "✔ test"
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
 	}
 	s.createFrames()
 	s.Start()
@@ -199,9 +205,10 @@ func TestFail(t *testing.T) {
 
 	want := "✖ test"
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
 	}
 	s.createFrames()
 	s.Start()
@@ -227,9 +234,10 @@ func TestWarn(t *testing.T) {
 
 	want := "⚠ test"
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
 	}
 	s.createFrames()
 	s.Start()
@@ -255,10 +263,11 @@ func TestFinish(t *testing.T) {
 	frames := []string{"◐ test", "◓ test", "◑ test", "◒ test"}
 
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
-		step:      5,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
+		step:         5,
 	}
 	s.createFrames()
 	s.Start()
@@ -288,9 +297,10 @@ func TestFinishWithSymbol(t *testing.T) {
 	symbol := "ℹ"
 	want := "ℹ test"
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
 	}
 	s.createFrames()
 	s.Start()
@@ -317,9 +327,10 @@ func TestFinishWithMessage(t *testing.T) {
 	message := "test2"
 	want := "ℹ test2"
 	s := &Spinner{
-		animation: animations[Ball],
-		message:   "test",
-		Writer:    &buf,
+		animation:    animations[Ball],
+		message:      "test",
+		disableColor: true,
+		Writer:       &buf,
 	}
 	s.createFrames()
 	s.Start()
