@@ -1,0 +1,8 @@
+package: github.com/slok/gospinner
+import:
+- package: github.com/fatih/color
+  version: v1.0.0
+- package: github.com/mattn/go-colorable
+  version: v0.0.6
+- package: github.com/mattn/go-isatty
+  version: v0.0.1
