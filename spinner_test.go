@@ -77,6 +77,36 @@ func TestRender(t *testing.T) {
 	}
 }
 
+func TestRenderColor(t *testing.T) {
+	tests := []struct {
+		kind         AnimationKind
+		startMessage string
+		color        ColorAttr
+
+		WantFrames []string
+	}{
+		{Ball, "This is a test", FgHiCyan, []string{"\x1b[96m◐\x1b[0m This is a test", "\x1b[96m◓\x1b[0m This is a test", "\x1b[96m◑\x1b[0m This is a test", "\x1b[96m◒\x1b[0m This is a test"}},
+		{Dots, "This is another test", FgMagenta, []string{"\x1b[35m⠋\x1b[0m This is another test", "\x1b[35m⠙\x1b[0m This is another test", "\x1b[35m⠹\x1b[0m This is another test", "\x1b[35m⠸\x1b[0m This is another test", "\x1b[35m⠼\x1b[0m This is another test", "\x1b[35m⠴\x1b[0m This is another test", "\x1b[35m⠦\x1b[0m This is another test", "\x1b[35m⠧\x1b[0m This is another test", "\x1b[35m⠇\x1b[0m This is another test", "\x1b[35m⠏\x1b[0m This is another test"}},
+		{BouncingBar, "Это тест", FgHiGreen, []string{"\x1b[92m[    ]\x1b[0m Это тест", "\x1b[92m[   =]\x1b[0m Это тест", "\x1b[92m[  ==]\x1b[0m Это тест", "\x1b[92m[ ===]\x1b[0m Это тест", "\x1b[92m[====]\x1b[0m Это тест", "\x1b[92m[=== ]\x1b[0m Это тест", "\x1b[92m[==  ]\x1b[0m Это тест", "\x1b[92m[=   ]\x1b[0m Это тест"}},
+	}
+
+	for _, test := range tests {
+		var buf bytes.Buffer
+		s, _ := NewSpinnerWithColor(test.kind, test.color)
+		s.message = test.startMessage
+		s.Writer = &buf
+
+		s.createFrames()
+
+		for _, f := range test.WantFrames {
+			s.Render()
+			if !strings.Contains(buf.String(), f) {
+				t.Errorf("%+v\n - Wrong frame rendered, got: %v, want: %v", test, buf.String(), f)
+			}
+		}
+	}
+}
+
 func TestSetMessage(t *testing.T) {
 	tests := []struct {
 		kind          AnimationKind
