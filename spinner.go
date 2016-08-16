@@ -217,7 +217,7 @@ func (s *Spinner) Fail() error {
 
 // Warn will stop the animation with a warning symbol where the spinner is
 func (s *Spinner) Warn() error {
-	return s.FinishWithSymbol(s.warnColor.SprintfFunc()(WarningSymbol))
+	return s.FinishWithSymbol(s.warnColor.SprintfFunc()(warningSymbol))
 }
 
 // Finish will stop an write to the next line

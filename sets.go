@@ -6,7 +6,7 @@ import "time"
 const (
 	successSymbol = "✔"
 	failureSymbol = "✖"
-	WarningSymbol = "⚠"
+	warningSymbol = "⚠"
 )
 
 // AnimationKind represents the kind of the animation
