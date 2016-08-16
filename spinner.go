@@ -11,10 +11,10 @@ import (
 
 var (
 	// default colors for the application
-	defaultColor        = newColor(FgHiCyan)
-	defaultSuccessColor = newColor(FgHiGreen)
-	defaultFailColor    = newColor(FgHiRed)
-	defaultWarnColor    = newColor(FgHiYellow)
+	defaultColor        = FgHiCyan
+	defaultSuccessColor = FgHiGreen
+	defaultFailColor    = FgHiRed
+	defaultWarnColor    = FgHiYellow
 )
 
 // Spinner is a representation of the animation itself
@@ -47,68 +47,69 @@ type Spinner struct {
 	// Separator will separate the messages each other, by default this should be carriage return
 	separator string
 
-	// color
-	color *Color
+	// colors
+	color        *Color
+	succeedColor *Color
+	failColor    *Color
+	warnColor    *Color
 
 	// disableColor
 	disableColor bool
 }
 
 //create is a helper function for all the creators
-func create(kind AnimationKind, startMessage string) (*Spinner, error) {
+func create(kind AnimationKind) (*Spinner, error) {
 	an, ok := animations[kind]
 	if !ok {
 		return nil, errors.New("Wrong kind of animation")
 	}
 	s := &Spinner{
 		animation: an,
-		message:   startMessage,
 		Writer:    os.Stdout,
 		separator: "\r",
 	}
 	return s, nil
 }
 
-// NewSpinner is the defalult spinner for easy ussage with default colors
-func NewSpinner(kind AnimationKind, startMessage string) (*Spinner, error) {
-
-	s, err := create(kind, startMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	s.color = defaultColor
-	s.createFrames()
-
-	return s, nil
+// NewSpinner creates a new spinner with the common default values, this should
+// be the most used one, fast and easy.
+func NewSpinner(kind AnimationKind) (*Spinner, error) {
+	return NewSpinnerWithColor(kind, defaultColor)
 }
 
-func NewSpinnerNoColor(kind AnimationKind, startMessage string) (*Spinner, error) {
-	s, err := create(kind, startMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	s.color = defaultColor
+// NewSpinnerNoColor creates an spinner that doesn't have color, shoud be
+// compatible with all the terminals
+func NewSpinnerNoColor(kind AnimationKind) (*Spinner, error) {
+	s, err := NewSpinner(kind)
+	// Disable colors
 	s.disableColor = true
-	s.createFrames()
+	s.color.DisableColor()
+	s.succeedColor.DisableColor()
+	s.failColor.DisableColor()
+	s.warnColor.DisableColor()
 
-	return s, nil
+	return s, err
 }
 
-// NewSpinnerWithColor returns a new spinner with color
-func NewSpinnerWithColor(kind AnimationKind, startMessage string, color ColorAttr) (*Spinner, error) {
-	s, err := create(kind, startMessage)
+// NewSpinnerWithColor creates an spinner with a custom color, same as the default
+// one, but instead you can select the color you want for the spinner
+func NewSpinnerWithColor(kind AnimationKind, color ColorAttr) (*Spinner, error) {
+	s, err := create(kind)
 	if err != nil {
 		return nil, err
 	}
 
 	s.color = newColor(color)
-	s.createFrames()
+
+	// Set succes, fail and warn colors
+	s.succeedColor = newColor(defaultSuccessColor)
+	s.failColor = newColor(defaultFailColor)
+	s.warnColor = newColor(defaultWarnColor)
+
 	return s, nil
 }
 
-func (s *Spinner) createFrames() {
+func (s *Spinner) createFrames() error {
 	f := make([]string, len(s.animation.frames))
 	for i, c := range s.animation.frames {
 		var symbol = c
@@ -120,23 +121,19 @@ func (s *Spinner) createFrames() {
 
 	// Set the new animation
 	s.frames = f
-
+	return nil
 }
 
-// Start will animate with the recomended speed
-func (s *Spinner) Start() {
-	s.StartWithSpeed(s.animation.interval)
+// Start will animate with the recommended speed, this should be the default
+// choice.
+func (s *Spinner) Start(message string) {
+	s.StartWithSpeed(message, s.animation.interval)
 }
 
-// StartWithMessage will animate with the recommended speend and a new message
-func (s *Spinner) StartWithMessage(message string) {
-	s.StartWithSpeed(s.animation.interval)
+// StartWithSpeed will start animation witha  custom speed for the spinner
+func (s *Spinner) StartWithSpeed(message string, speed time.Duration) {
 	s.message = message
 	s.createFrames()
-}
-
-// StartWithSpeed will start animation the spinner on the
-func (s *Spinner) StartWithSpeed(speed time.Duration) {
 	// Start the animation in background
 	go func() {
 		s.running = true
@@ -186,29 +183,17 @@ func (s *Spinner) Reset() {
 
 // Succeed will stop the animation with a success symbol where the spinner is
 func (s *Spinner) Succeed() {
-	symbol := successSymbol
-	if !s.disableColor || s.color != nil {
-		symbol = defaultSuccessColor.SprintfFunc()(successSymbol)
-	}
-	s.FinishWithSymbol(symbol)
+	s.FinishWithSymbol(s.succeedColor.SprintfFunc()(successSymbol))
 }
 
 // Fail will stop the animation with a failure symbol where the spinner is
 func (s *Spinner) Fail() {
-	symbol := failureSymbol
-	if !s.disableColor || s.color != nil {
-		symbol = defaultFailColor.SprintfFunc()(failureSymbol)
-	}
-	s.FinishWithSymbol(symbol)
+	s.FinishWithSymbol(s.failColor.SprintfFunc()(failureSymbol))
 }
 
 // Warn will stop the animation with a warning symbol where the spinner is
 func (s *Spinner) Warn() {
-	symbol := WarningSymbol
-	if !s.disableColor || s.color != nil {
-		symbol = defaultWarnColor.SprintfFunc()(WarningSymbol)
-	}
-	s.FinishWithSymbol(symbol)
+	s.FinishWithSymbol(s.warnColor.SprintfFunc()(WarningSymbol))
 }
 
 // Finish will stop an write to the next line

@@ -10,24 +10,17 @@ import (
 
 func TestCorrectCreation(t *testing.T) {
 	tests := []struct {
-		kind         AnimationKind
-		startMessage string
-
-		WantFrames []string
+		kind AnimationKind
 	}{
-		{Ball, "This is a test", []string{"◐ This is a test", "◓ This is a test", "◑ This is a test", "◒ This is a test"}},
-		{Dots, "This is another test", []string{"⠋ This is another test", "⠙ This is another test", "⠹ This is another test", "⠸ This is another test", "⠼ This is another test", "⠴ This is another test", "⠦ This is another test", "⠧ This is another test", "⠇ This is another test", "⠏ This is another test"}},
-		{BouncingBar, "Это тест", []string{"[    ] Это тест", "[   =] Это тест", "[  ==] Это тест", "[ ===] Это тест", "[====] Это тест", "[=== ] Это тест", "[==  ] Это тест", "[=   ] Это тест"}},
+		{Ball},
+		{Dots},
+		{BouncingBar},
 	}
 
 	for _, test := range tests {
-		s, err := NewSpinner(test.kind, test.startMessage)
+		_, err := NewSpinner(test.kind)
 		if err != nil {
 			t.Errorf("%+v\n - Creation shouldn't fail, it did: %s", test, err)
-		}
-
-		if !reflect.DeepEqual(s.frames, test.WantFrames) {
-			t.Errorf("%+v\n - Frames should be the same, got: %v, want: %v", test, s.frames, test.WantFrames)
 		}
 	}
 }
@@ -45,12 +38,8 @@ func TestCreateFrames(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		s := &Spinner{
-			animation:    animations[test.kind],
-			message:      test.startMessage,
-			disableColor: true,
-		}
-
+		s, _ := NewSpinnerNoColor(test.kind)
+		s.message = test.startMessage
 		s.createFrames()
 
 		if !reflect.DeepEqual(s.frames, test.WantFrames) {
@@ -73,13 +62,10 @@ func TestRender(t *testing.T) {
 
 	for _, test := range tests {
 		var buf bytes.Buffer
+		s, _ := NewSpinnerNoColor(test.kind)
+		s.message = test.startMessage
+		s.Writer = &buf
 
-		s := &Spinner{
-			animation:    animations[test.kind],
-			message:      test.startMessage,
-			disableColor: true,
-			Writer:       &buf,
-		}
 		s.createFrames()
 
 		for _, f := range test.WantFrames {
@@ -106,14 +92,11 @@ func TestSetMessage(t *testing.T) {
 
 	for _, test := range tests {
 		var buf bytes.Buffer
-
-		s := &Spinner{
-			animation:    animations[test.kind],
-			message:      test.startMessage,
-			disableColor: true,
-			Writer:       &buf,
-		}
+		s, _ := NewSpinnerNoColor(test.kind)
+		s.message = test.startMessage
+		s.Writer = &buf
 		s.createFrames()
+
 		s.Render()
 		if !strings.Contains(buf.String(), test.WantFrames[0]) {
 			t.Errorf("%+v\n - Wrong frame rendered, got: %v, want: %v", test, buf.String(), test.WantFrames[0])
@@ -127,15 +110,10 @@ func TestSetMessage(t *testing.T) {
 }
 func TestStop(t *testing.T) {
 	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start("test")
 
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-	}
-	s.createFrames()
-	s.Start()
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
@@ -153,13 +131,11 @@ func TestReset(t *testing.T) {
 	var buf bytes.Buffer
 	frames := []string{"◐ This is a test", "◓ This is a test", "◑ This is a test", "◒ This is a test"}
 
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "This is a test",
-		disableColor: true,
-		Writer:       &buf,
-		step:         5,
-	}
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.message = "This is a test"
+	s.step = 5
+
 	s.Reset()
 
 	if s.step != 0 {
@@ -172,17 +148,12 @@ func TestReset(t *testing.T) {
 }
 
 func TestSucceed(t *testing.T) {
-	var buf bytes.Buffer
-
 	want := "✔ test"
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-	}
-	s.createFrames()
-	s.Start()
+
+	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start("test")
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
@@ -201,17 +172,12 @@ func TestSucceed(t *testing.T) {
 }
 
 func TestFail(t *testing.T) {
-	var buf bytes.Buffer
-
 	want := "✖ test"
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-	}
-	s.createFrames()
-	s.Start()
+
+	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start("test")
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
@@ -230,17 +196,12 @@ func TestFail(t *testing.T) {
 }
 
 func TestWarn(t *testing.T) {
-	var buf bytes.Buffer
-
 	want := "⚠ test"
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-	}
-	s.createFrames()
-	s.Start()
+
+	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start("test")
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
@@ -259,18 +220,13 @@ func TestWarn(t *testing.T) {
 }
 
 func TestFinish(t *testing.T) {
-	var buf bytes.Buffer
 	frames := []string{"◐ test", "◓ test", "◑ test", "◒ test"}
 
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-		step:         5,
-	}
-	s.createFrames()
-	s.Start()
+	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start("test")
+	s.step = 5
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
@@ -293,17 +249,14 @@ func TestFinish(t *testing.T) {
 }
 
 func TestFinishWithSymbol(t *testing.T) {
-	var buf bytes.Buffer
 	symbol := "ℹ"
 	want := "ℹ test"
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-	}
-	s.createFrames()
-	s.Start()
+
+	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start("test")
+	s.step = 5
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
@@ -322,18 +275,15 @@ func TestFinishWithSymbol(t *testing.T) {
 }
 
 func TestFinishWithMessage(t *testing.T) {
-	var buf bytes.Buffer
 	symbol := "ℹ"
 	message := "test2"
 	want := "ℹ test2"
-	s := &Spinner{
-		animation:    animations[Ball],
-		message:      "test",
-		disableColor: true,
-		Writer:       &buf,
-	}
-	s.createFrames()
-	s.Start()
+
+	var buf bytes.Buffer
+	s, _ := NewSpinnerNoColor(Ball)
+	s.Writer = &buf
+	s.Start(message)
+	s.step = 5
 	time.Sleep(10 * time.Millisecond)
 
 	if !s.running {
