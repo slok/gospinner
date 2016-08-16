@@ -1,5 +1,5 @@
 
-# Gospinner [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/slok/gospinner)[![Build Status](https://travis-ci.org/slok/gospinner.svg?branch=master)](https://travis-ci.org/slok/gospinner)
+# Gospinner [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/slok/gospinner)  [![Build Status](https://travis-ci.org/slok/gospinner.svg?branch=master)](https://travis-ci.org/slok/gospinner)
 
 
 Gospinner lets you make simple spinners for your go cli applications. Is fast
