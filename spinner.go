@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -44,6 +45,9 @@ type Spinner struct {
 	// running shows the state of the animation
 	running bool
 
+	// Our locker
+	sync.Mutex
+
 	// Separator will separate the messages each other, by default this should be carriage return
 	separator string
 
@@ -67,6 +71,7 @@ func create(kind AnimationKind) (*Spinner, error) {
 		animation: an,
 		Writer:    os.Stdout,
 		separator: "\r",
+		Mutex:     sync.Mutex{},
 	}
 	return s, nil
 }
@@ -109,7 +114,7 @@ func NewSpinnerWithColor(kind AnimationKind, color ColorAttr) (*Spinner, error) 
 	return s, nil
 }
 
-func (s *Spinner) createFrames() error {
+func (s *Spinner) createFrames() {
 	f := make([]string, len(s.animation.frames))
 	for i, c := range s.animation.frames {
 		var symbol = c
@@ -121,17 +126,22 @@ func (s *Spinner) createFrames() error {
 
 	// Set the new animation
 	s.frames = f
-	return nil
 }
 
 // Start will animate with the recommended speed, this should be the default
 // choice.
-func (s *Spinner) Start(message string) {
-	s.StartWithSpeed(message, s.animation.interval)
+func (s *Spinner) Start(message string) error {
+	return s.StartWithSpeed(message, s.animation.interval)
 }
 
 // StartWithSpeed will start animation witha  custom speed for the spinner
-func (s *Spinner) StartWithSpeed(message string, speed time.Duration) {
+func (s *Spinner) StartWithSpeed(message string, speed time.Duration) error {
+	s.Lock()
+	defer s.Unlock()
+	if s.running {
+		return errors.New("spinner is already running")
+	}
+
 	s.message = message
 	s.createFrames()
 	// Start the animation in background
@@ -143,10 +153,15 @@ func (s *Spinner) StartWithSpeed(message string, speed time.Duration) {
 			s.Render()
 		}
 	}()
+	return nil
 }
 
 // Render will render manually an step
-func (s *Spinner) Render() {
+func (s *Spinner) Render() error {
+	if len(s.frames) == 0 {
+		return errors.New("no frames available to to render")
+	}
+
 	s.step = s.step % len(s.frames)
 	previousLen := len(s.previousFrame)
 	s.previousFrame = fmt.Sprintf("%s%s", s.separator, s.frames[s.step])
@@ -161,18 +176,27 @@ func (s *Spinner) Render() {
 
 	fmt.Fprint(s.Writer, s.previousFrame)
 	s.step++
+	return nil
 }
 
 // SetMessage will set new message on the animation without stoping it
 func (s *Spinner) SetMessage(message string) {
+	s.Lock()
 	s.message = message
+	s.Unlock()
 	s.createFrames()
 }
 
 // Stop will stop the animation
-func (s *Spinner) Stop() {
+func (s *Spinner) Stop() error {
+	s.Lock()
+	defer s.Unlock()
+	if !s.running {
+		return errors.New("spinner is not running")
+	}
 	s.ticker.Stop()
 	s.running = false
+	return nil
 }
 
 // Reset will set the spinner to its initial frame
@@ -182,35 +206,40 @@ func (s *Spinner) Reset() {
 }
 
 // Succeed will stop the animation with a success symbol where the spinner is
-func (s *Spinner) Succeed() {
-	s.FinishWithSymbol(s.succeedColor.SprintfFunc()(successSymbol))
+func (s *Spinner) Succeed() error {
+	return s.FinishWithSymbol(s.succeedColor.SprintfFunc()(successSymbol))
 }
 
 // Fail will stop the animation with a failure symbol where the spinner is
-func (s *Spinner) Fail() {
-	s.FinishWithSymbol(s.failColor.SprintfFunc()(failureSymbol))
+func (s *Spinner) Fail() error {
+	return s.FinishWithSymbol(s.failColor.SprintfFunc()(failureSymbol))
 }
 
 // Warn will stop the animation with a warning symbol where the spinner is
-func (s *Spinner) Warn() {
-	s.FinishWithSymbol(s.warnColor.SprintfFunc()(WarningSymbol))
+func (s *Spinner) Warn() error {
+	return s.FinishWithSymbol(s.warnColor.SprintfFunc()(WarningSymbol))
 }
 
 // Finish will stop an write to the next line
-func (s *Spinner) Finish() {
-	s.Stop()
+func (s *Spinner) Finish() error {
+	if err := s.Stop(); err != nil {
+		return err
+	}
 	s.Reset()
 	fmt.Fprint(s.Writer, "\n")
+	return nil
 }
 
 // FinishWithSymbol will finish the animation with a symbol where the spinner is
-func (s *Spinner) FinishWithSymbol(symbol string) {
-	s.FinishWithMessage(symbol, s.message)
+func (s *Spinner) FinishWithSymbol(symbol string) error {
+	return s.FinishWithMessage(symbol, s.message)
 }
 
 // FinishWithMessage will finish animation setting a message and a symbol where the spinner was
-func (s *Spinner) FinishWithMessage(symbol, closingMessage string) {
-	s.Stop()
+func (s *Spinner) FinishWithMessage(symbol, closingMessage string) error {
+	if err := s.Stop(); err != nil {
+		return err
+	}
 	s.Reset()
 	previousLen := len(s.previousFrame)
 	finalMsg := fmt.Sprintf("%s %s", symbol, closingMessage)
@@ -221,4 +250,5 @@ func (s *Spinner) FinishWithMessage(symbol, closingMessage string) {
 		finalMsg = finalMsg + suffix
 	}
 	fmt.Fprintf(s.Writer, "%s%s\n", s.separator, finalMsg)
+	return nil
 }

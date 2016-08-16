@@ -25,6 +25,23 @@ func TestCorrectCreation(t *testing.T) {
 	}
 }
 
+func TestStartMultipleTimes(t *testing.T) {
+	s, err := NewSpinner(Ball)
+	if err != nil {
+		t.Errorf("\n - Creation shouldn't fail, it did: %s", err)
+	}
+	err = s.Start("test")
+	if err != nil {
+		t.Errorf("\n - First run shouldn't fail, it did: %s", err)
+	}
+	time.Sleep(1 * time.Millisecond)
+	err = s.Start("test")
+	if err == nil {
+		t.Errorf("\n - Second run should fail, it didn't")
+	}
+
+}
+
 func TestCreateFrames(t *testing.T) {
 	tests := []struct {
 		kind         AnimationKind
@@ -75,6 +92,15 @@ func TestRender(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestRenderError(t *testing.T) {
+	s, _ := NewSpinnerNoColor(Ball)
+	err := s.Render()
+	if err == nil {
+		t.Errorf("\n - Render should return error, it didn't")
+	}
+
 }
 
 func TestRenderColor(t *testing.T) {
@@ -154,6 +180,14 @@ func TestStop(t *testing.T) {
 
 	if s.running {
 		t.Errorf("- Spinner should be stopped, it isn't")
+	}
+}
+
+func TestStopError(t *testing.T) {
+	s, _ := NewSpinnerNoColor(Ball)
+	err := s.Stop()
+	if err == nil {
+		t.Errorf("\n - Stop should return error, it didn't")
 	}
 }
 
