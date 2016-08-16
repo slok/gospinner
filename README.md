@@ -20,7 +20,7 @@ go get github.com/slok/gospinner
 
 * [Example 0](https://asciinema.org/a/82944)
 * [Example 1](https://asciinema.org/a/82946)
-* [Example 2](https://asciinema.org/a/82947)
+* [Example 2](https://asciinema.org/a/82963)
 
 ## Examples
 
