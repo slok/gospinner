@@ -1,4 +1,4 @@
-## x.x.x / 2016-xx-xx
+## 0.1.0 / 2016-08-16
 
 * [FEATURE] Add default, colored and no colored spinners
 * [FEATURE] Add success, fail and warn finishers
