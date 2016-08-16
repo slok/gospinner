@@ -5,6 +5,11 @@
 Gospinner lets you make simple spinners for your go cli applications. Is fast
 and easy to use. Simple customizations and ready to go defaults!
 
+
+
+![gospinner](gospinner.gif)
+
+
 ## Install
 
 ```
