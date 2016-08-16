@@ -1,5 +1,6 @@
 
-# Gospinner
+# Gospinner [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/slok/gospinner)[![Build Status](https://travis-ci.org/slok/gospinner.svg?branch=master)](https://travis-ci.org/slok/gospinner)
+
 
 Gospinner lets you make simple spinners for your go cli applications. Is fast
 and easy to use. Simple customizations and ready to go defaults!
@@ -95,7 +96,7 @@ s.FinishWithMessage("⚔", "Finished!")
 * Pong
 * ProgressBar
 
-For more customizations you should check the [documentation]()
+For more customizations you should check the [documentation](https://godoc.org/github.com/slok/gospinner)
 
 ## Credits
 
