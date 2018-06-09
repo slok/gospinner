@@ -147,10 +147,10 @@ func (s *Spinner) StartWithSpeed(message string, speed time.Duration) error {
 
 	s.message = message
 	s.createFrames()
+	s.ticker = time.NewTicker(speed)
 	// Start the animation in background
 	go func() {
 		s.running = true
-		s.ticker = time.NewTicker(speed)
 
 		for range s.ticker.C {
 			s.Render()
