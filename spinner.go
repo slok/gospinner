@@ -105,11 +105,14 @@ func NewSpinnerWithColor(kind AnimationKind, color ColorAttr) (*Spinner, error) 
 	}
 
 	s.color = newColor(color)
-
-	// Set succes, fail and warn colors
 	s.succeedColor = newColor(defaultSuccessColor)
 	s.failColor = newColor(defaultFailColor)
 	s.warnColor = newColor(defaultWarnColor)
+
+	s.color.EnableColor()
+	s.succeedColor.EnableColor()
+	s.failColor.EnableColor()
+	s.warnColor.EnableColor()
 
 	return s, nil
 }
